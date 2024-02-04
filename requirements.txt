@@ -1,3 +1,6 @@
 fastf1
-numpy
+tensorflow
+scikit-learn
 pandas
+numpy
+matplotlib
