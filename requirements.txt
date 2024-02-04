@@ -1,2 +1,6 @@
 fastf1
 tensorflow
+scikit-learn
+pandas
+numpy
+matplotlib
