@@ -1,39 +1,58 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
 from sklearn.model_selection import train_test_split
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Flatten
 
 
 def main():
 
     training_file_path = "f1TrainingData.csv"
+    hot_shot_columns = ['Year', 'Driver', 'Team']
+    features_to_drop = ['RaceID', 'RacePos']
 
     df = pd.read_csv(training_file_path)
 
     # Unique race identifiers
     races = df['RaceID'].unique()
 
+    # Preprocessing categorical data (year, driver, team)
+    encoded_df = pd.get_dummies(df, columns=hot_shot_columns)
+    
+    numerical_columns = encoded_df.columns.drop('RaceID')
+    encoded_df[numerical_columns] = encoded_df[numerical_columns].astype(float)
+
+    # X=features (input data), and y=labels (output data)
     X = []
     y = []
 
+    # Splititng the csv up into separate races
     for race in races:
-        race_data = df[df['RaceID'] == race]
-        quali_positions = race_data['QualiPos'].tolist()
-        race_positions = race_data['RacePos'].tolist()
+        # Grouping races by RaceId
+        race_data = encoded_df[encoded_df['RaceID'] == race]
+        
+        # Extracting features by ignoring RaceID, and RacePos
+        features = race_data.drop(columns=features_to_drop).values
+        labels = race_data['RacePos'].values
 
-        X.append(quali_positions)
-        y.append(race_positions)
+        X.append(features)
+        y.append(labels)
 
     X = np.array(X)
     y = np.array(y)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+    # Input shape depends on number of features
+    input_shape = (features.shape[1], )
+
     model = Sequential([
-        Dense(64, activation='relu', input_shape=(20,)),
+        Flatten(input_shape=X_train.shape[1:]),
+        Dense(64, activation='relu', input_shape=input_shape),
         Dense(64, activation='relu'),
         Dense(20, activation='linear')
     ])

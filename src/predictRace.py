@@ -1,19 +1,38 @@
 import numpy as np
+import pandas as pd
+
 from tensorflow.keras.models import load_model
 import sklearn.metrics as metrics
 from scipy.stats import spearmanr, kendalltau
 
 from gatherHistoricalData import getRaceData
 
+
 def main():
-    model = load_model("./models/2023.h5")
+
+    training_file_path = "f1TrainingData.csv"
+    hot_shot_columns = ['Year', 'Driver', 'Team']
+    features_to_drop = ['RaceID', 'RacePos']
+
+    training_df = pd.read_csv(training_file_path)
+
+    encoded_training = pd.get_dummies(training_df, columns=hot_shot_columns)
+
+    model = load_model("./models/2021-2023_driverteamyear.h5")
     
-    race_to_predict = getRaceData(2022, 2)
+    race_to_predict = getRaceData(2023, 3)
+    encoded_race = pd.get_dummies(race_to_predict, columns=hot_shot_columns)
+    encoded_race = encoded_race.reindex(columns=encoded_training.columns, fill_value=0)
+    race_features = encoded_race.drop(columns=features_to_drop, errors='ignore')
+
+    race_features = np.array([race_features], dtype='float')
+
+    print([race_features.shape])
 
     # Creating variables for quali_positions, actual_positions, predicted_positions
     quali_positions = race_to_predict['QualiPos'].values.reshape(1, -1)
     actual_positions = race_to_predict.sort_values(by='QualiPos')['RacePos'].values  # Ensure this matches the order of quali_positions
-    predicted_positions_raw = model.predict(quali_positions)
+    predicted_positions_raw = model.predict(race_features)
     predicted_positions = np.argsort(predicted_positions_raw[0]) + 1  # This will be used for ranking, not direct comparison
 
     # Creating variables for driver orders
