@@ -30,9 +30,11 @@ def getRaceData(race_year, round_number):
     # Now use the mapping to fetch race positions for drivers in the qualifying results
     event_data = {
         'RaceID': f"{quali_session.event['EventName'].replace(' ', '')}{race_year}",
-        'Driver': [row['DriverId'] for index, row in quali_results.iterrows()],
-        'QualiPos': [row['Position'] for index, row in quali_results.iterrows()],
-        'RacePos': [race_pos_map.get(row['DriverId']) for index, row in quali_results.iterrows()],
+        'Year': race_year,
+        'Driver': [row['DriverId'] for _, row in quali_results.iterrows()],
+        'Team': [row['TeamId'] for _, row in quali_results.iterrows()],
+        'QualiPos': [row['Position'] for _, row in quali_results.iterrows()],
+        'RacePos': [race_pos_map.get(row['DriverId']) for _, row in quali_results.iterrows()],
     }
 
     event_df = pd.DataFrame(event_data)
@@ -49,7 +51,7 @@ def getRaceData(race_year, round_number):
 
 def main():
 
-    start_year = 2023
+    start_year = 2021
     end_year = 2023
 
     file_path = "./f1TrainingData.csv"
@@ -57,7 +59,8 @@ def main():
     for year in range(start_year, end_year + 1):
         number_of_races = getNumberOfEvents(year)
 
-        for race in range(1, number_of_races + 1):
+        for race in range(1, number_of_races):
+            print(race)
             event = getRaceData(year, race)
 
             if year == start_year and race == 1:
